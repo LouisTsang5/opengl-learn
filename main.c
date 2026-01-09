@@ -8,9 +8,13 @@
 
 #define APP_GLFW_CTX_VER_MAJOR 3
 #define APP_GLFW_CTX_VER_MINOR 3
-#define SHADER_ERR_LOG_LENGTH 512
 #define WIDTH 800
 #define HEIGHT 600
+
+// Define global error log
+#define GBL_ERR_LOG_LENGTH 1024
+char gbl_err_log[GBL_ERR_LOG_LENGTH];
+#define logerr(...) snprintf(gbl_err_log, sizeof(gbl_err_log), __VA_ARGS__);
 
 typedef struct
 {
@@ -19,6 +23,12 @@ typedef struct
     float z;
 } Vertex;
 
+typedef struct
+{
+    const GLsizei count;
+    const GLchar **shaderSource;
+} ShaderInfo;
+
 const char *VertexShaderSource = "#version 330 core\n"
                                  "layout (location = 0) in vec3 aPos;\n"
                                  "void main()\n"
@@ -26,14 +36,21 @@ const char *VertexShaderSource = "#version 330 core\n"
                                  "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
                                  "}\0";
 
+const char *FragmentShaderSource = "#version 330 core\n"
+                                   "out vec4 FragColor;\n"
+                                   "void main()\n"
+                                   "{FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);}\0";
+
 GLFWwindow *init();
+unsigned int make_shader_prog(const ShaderInfo *v_info, const ShaderInfo *f_info);
 void process_input(GLFWwindow *window);
-unsigned int make_shader(GLenum shader_type, GLsizei count, const GLchar **shaderSource);
 
 int main()
 {
     puts("Starting...");
     GLFWwindow *window = init();
+    if (!window)
+        goto exit_err;
 
     // define vertices
     Vertex vertices[] = {
@@ -48,11 +65,15 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Make Vertex Shader
-    if (!make_shader(GL_VERTEX_SHADER, 1, &VertexShaderSource))
-    {
+    // Define shaders
+    const ShaderInfo v_shader = {1, &VertexShaderSource};
+    const ShaderInfo f_shader = {1, &FragmentShaderSource};
+
+    // Make shader program
+    const unsigned int shader_prog = make_shader_prog(&v_shader, &f_shader);
+    if (!shader_prog)
         goto exit_err;
-    }
+    glUseProgram(shader_prog);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -71,6 +92,7 @@ int main()
     return 0;
 
 exit_err:
+    puts(gbl_err_log);
     glfwTerminate();
     return -1;
 }
@@ -81,33 +103,75 @@ void process_input(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-unsigned int make_shader(GLenum shader_type, GLsizei count, const GLchar **shaderSource)
+unsigned int make_shader(GLenum shader_type, const ShaderInfo *info)
 {
     // Create shader
     unsigned int shader = glCreateShader(shader_type);
     if (!shader)
     {
-        puts("Create shader failed");
+        logerr("Shader creation failed");
         return 0;
     }
 
     // Compile
-    glShaderSource(shader, count, shaderSource, NULL);
+    glShaderSource(shader, info->count, info->shaderSource, NULL);
     glCompileShader(shader);
 
     // Check for error
     int success;
-    char infoLog[SHADER_ERR_LOG_LENGTH];
+    char inner_log[GBL_ERR_LOG_LENGTH];
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        glGetShaderInfoLog(shader, SHADER_ERR_LOG_LENGTH, NULL, infoLog);
-        printf("ERROR::SHADER::COMPILATION_FAILED\n%s\n", infoLog);
+        glGetShaderInfoLog(shader, sizeof(inner_log), NULL, inner_log);
+        logerr("Shader compilation failed\n%s", inner_log);
         return 0;
     }
 
     // Return shader
     return shader;
+}
+
+unsigned int make_shader_prog(const ShaderInfo *v_info, const ShaderInfo *f_info)
+{
+    // Make Vertex Shader
+    unsigned int v_shader = make_shader(GL_VERTEX_SHADER, v_info);
+    if (!v_shader)
+        return 0;
+
+    // Make Fragment Shader
+    unsigned int f_shader = make_shader(GL_FRAGMENT_SHADER, f_info);
+    if (!f_shader)
+        return 0;
+
+    // Create Shader Program
+    unsigned int shader_prog = glCreateProgram();
+    if (!shader_prog)
+    {
+        logerr("Failed to create shader program");
+        return 0;
+    }
+
+    // Link shader programs
+    glAttachShader(shader_prog, v_shader);
+    glAttachShader(shader_prog, f_shader);
+    glLinkProgram(shader_prog);
+    int success;
+    char inner_log[GBL_ERR_LOG_LENGTH];
+    glGetProgramiv(shader_prog, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shader_prog, sizeof(inner_log), NULL, inner_log);
+        logerr("Shader program linking failed\n%s", inner_log);
+        return 0;
+    }
+
+    // Delete shaders
+    glDeleteShader(v_shader);
+    glDeleteShader(f_shader);
+
+    // Return program
+    return shader_prog;
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -128,7 +192,7 @@ GLFWwindow *init()
     GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
-        puts("Failed to create GLFW window");
+        logerr("Failed to create GLFW window");
         return NULL;
     }
     glfwMakeContextCurrent(window);
@@ -136,7 +200,7 @@ GLFWwindow *init()
     // Init glad
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        puts("Failed to initialize GLAD");
+        logerr("Failed to initialize GLAD");
         return NULL;
     }
 
