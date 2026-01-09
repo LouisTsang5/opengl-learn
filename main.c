@@ -53,23 +53,33 @@ int main()
         goto exit_err;
 
     // define vertices
-    Vertex vertices[] = {
+    const Vertex vertices[] = {
         {-0.5f, -0.5f, 0.0f},
         {0.5f, -0.5f, 0.0f},
         {0.0f, 0.5f, 0.0f},
     };
+    const unsigned long vertiex_count = sizeof(vertices) / sizeof(Vertex);
 
     // Make buffer
-    GLuint VBO;
+    unsigned int VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // Bind and set buffer
+    unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, vertiex_count, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glEnableVertexAttribArray(0);
 
-    // Define shaders
-    const ShaderInfo v_shader = {1, &VertexShaderSource};
-    const ShaderInfo f_shader = {1, &FragmentShaderSource};
+    // Unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     // Make shader program
+    const ShaderInfo v_shader = {1, &VertexShaderSource};
+    const ShaderInfo f_shader = {1, &FragmentShaderSource};
     const unsigned int shader_prog = make_shader_prog(&v_shader, &f_shader);
     if (!shader_prog)
         goto exit_err;
@@ -80,8 +90,14 @@ int main()
     {
         process_input(window);
 
+        // Background
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // render vertex
+        glUseProgram(shader_prog);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, vertiex_count);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
