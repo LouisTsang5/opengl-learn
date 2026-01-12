@@ -46,6 +46,7 @@ GLFWwindow *init();
 unsigned int make_shader_prog(const ShaderInfo *v_info, const ShaderInfo *f_info);
 void process_input(GLFWwindow *window);
 
+unsigned int make_vertex_arr(const Vertex *vertices, const int count);
 int main()
 {
     puts("Starting...");
@@ -59,24 +60,10 @@ int main()
         {0.5f, -0.5f, 0.0f},
         {0.0f, 0.5f, 0.0f},
     };
-    const unsigned long vertiex_count = sizeof(vertices) / sizeof(Vertex);
+    const int vertiex_count = sizeof(vertices) / sizeof(Vertex);
 
-    // Make buffer
-    unsigned int VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    // Bind and set buffer
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, vertiex_count, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // Unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    // vertex array
+    unsigned int va_id = make_vertex_arr(vertices, vertiex_count);
 
     // Make shader program
     const ShaderInfo v_shader = {1, &VertexShaderSource};
@@ -97,7 +84,7 @@ int main()
 
         // render vertex
         glUseProgram(shader_prog);
-        glBindVertexArray(VAO);
+        glBindVertexArray(va_id);
         glDrawArrays(GL_TRIANGLES, 0, vertiex_count);
 
         glfwSwapBuffers(window);
@@ -229,4 +216,21 @@ GLFWwindow *init()
     glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     return window;
+}
+
+
+unsigned int make_vertex_arr(const Vertex *vertices, const int count) {
+    // Make buffer
+    unsigned int va_id;
+    glGenVertexArrays(1, &va_id);
+    glBindVertexArray(va_id);
+
+    // Bind and set buffer
+    unsigned int vb_id;
+    glGenBuffers(1, &vb_id);
+    glBindBuffer(GL_ARRAY_BUFFER, vb_id);
+    glBufferData(GL_ARRAY_BUFFER, count * sizeof(Vertex), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, count, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glEnableVertexAttribArray(0);
+    return va_id;
 }
