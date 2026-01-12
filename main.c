@@ -23,6 +23,7 @@ typedef struct
     float y;
     float z;
 } Vertex;
+#define N_VERTEX_COMPONENT 3
 
 typedef struct
 {
@@ -45,8 +46,8 @@ const char *FragmentShaderSource = "#version 330 core\n"
 GLFWwindow *init();
 unsigned int make_shader_prog(const ShaderInfo *v_info, const ShaderInfo *f_info);
 void process_input(GLFWwindow *window);
+unsigned int make_vertex_arr(const Vertex *vertices, const int ver_count, const unsigned int *elements, const int elem_count);
 
-unsigned int make_vertex_arr(const Vertex *vertices, const int count);
 int main()
 {
     puts("Starting...");
@@ -56,14 +57,26 @@ int main()
 
     // define vertices
     const Vertex vertices[] = {
+        {-0.5f, 0.5f, 0.0f},
+        {0.5f, 0.5f, 0.0f},
         {-0.5f, -0.5f, 0.0f},
         {0.5f, -0.5f, 0.0f},
-        {0.0f, 0.5f, 0.0f},
     };
-    const int vertiex_count = sizeof(vertices) / sizeof(Vertex);
+
+    // define elements
+    const unsigned int elements[] = {
+        0,
+        1,
+        2,
+
+        1,
+        2,
+        3,
+    };
+    const int elem_count = sizeof(elements) / sizeof(unsigned int);
 
     // vertex array
-    unsigned int va_id = make_vertex_arr(vertices, vertiex_count);
+    unsigned int va_id = make_vertex_arr(vertices, sizeof(vertices) / sizeof(Vertex), elements, elem_count);
 
     // Make shader program
     const ShaderInfo v_shader = {1, &VertexShaderSource};
@@ -85,7 +98,8 @@ int main()
         // render vertex
         glUseProgram(shader_prog);
         glBindVertexArray(va_id);
-        glDrawArrays(GL_TRIANGLES, 0, vertiex_count);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, elem_count, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -218,8 +232,8 @@ GLFWwindow *init()
     return window;
 }
 
-
-unsigned int make_vertex_arr(const Vertex *vertices, const int count) {
+unsigned int make_vertex_arr(const Vertex *vertices, const int ver_count, const unsigned int *elements, const int elem_count)
+{
     // Make buffer
     unsigned int va_id;
     glGenVertexArrays(1, &va_id);
@@ -229,8 +243,16 @@ unsigned int make_vertex_arr(const Vertex *vertices, const int count) {
     unsigned int vb_id;
     glGenBuffers(1, &vb_id);
     glBindBuffer(GL_ARRAY_BUFFER, vb_id);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(Vertex), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, count, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glBufferData(GL_ARRAY_BUFFER, ver_count * sizeof(Vertex), vertices, GL_STATIC_DRAW);
+
+    // Bind and set element buffer
+    unsigned int eb_id;
+    glGenBuffers(1, &eb_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eb_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, elem_count * sizeof(unsigned int), elements, GL_STATIC_DRAW);
+
+    // Set attribute pointer
+    glVertexAttribPointer(0, N_VERTEX_COMPONENT, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
     glEnableVertexAttribArray(0);
     return va_id;
 }
