@@ -10,9 +10,10 @@
 #define APP_GLFW_CTX_VER_MINOR 3
 #define WIDTH 800
 #define HEIGHT 600
+#define LCL_ERR_LOG_LENGTH 1024
 
 // Define global error log
-#define GBL_ERR_LOG_LENGTH 1024
+#define GBL_ERR_LOG_LENGTH 2048
 char gbl_err_log[GBL_ERR_LOG_LENGTH];
 #define logerr(...) snprintf(gbl_err_log, sizeof(gbl_err_log), __VA_ARGS__);
 
@@ -135,7 +136,7 @@ unsigned int make_shader(GLenum shader_type, const ShaderInfo *info)
 
     // Check for error
     int success;
-    char inner_log[GBL_ERR_LOG_LENGTH];
+    char inner_log[LCL_ERR_LOG_LENGTH];
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
@@ -173,7 +174,7 @@ unsigned int make_shader_prog(const ShaderInfo *v_info, const ShaderInfo *f_info
     glAttachShader(shader_prog, f_shader);
     glLinkProgram(shader_prog);
     int success;
-    char inner_log[GBL_ERR_LOG_LENGTH];
+    char inner_log[LCL_ERR_LOG_LENGTH];
     glGetProgramiv(shader_prog, GL_LINK_STATUS, &success);
     if (!success)
     {
