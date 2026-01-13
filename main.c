@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -33,15 +34,19 @@ typedef struct
 
 const char *VertexShaderSource = "#version 330 core\n"
                                  "layout (location = 0) in vec3 aPos;\n"
+                                 "uniform float colorOffset;"
+                                 "out vec4 vertexColor;\n"
                                  "void main()\n"
                                  "{\n"
-                                 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+                                 "   gl_Position = vec4(aPos, 1.0);\n"
+                                 "   vertexColor = vec4((aPos.x * 2 + 1 + colorOffset) / 3, (aPos.y * 2 + 1 + colorOffset) / 3, (aPos.z * 2 + 1 + colorOffset) / 3, 1.0);"
                                  "}\0";
 
 const char *FragmentShaderSource = "#version 330 core\n"
                                    "out vec4 FragColor;\n"
+                                   "in vec4 vertexColor;\n"
                                    "void main()\n"
-                                   "{FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);}\0";
+                                   "{FragColor = vertexColor;}\0";
 
 GLFWwindow *init();
 unsigned int make_shader_prog(const ShaderInfo *v_info, const ShaderInfo *f_info);
@@ -86,6 +91,9 @@ int main()
         goto exit_err;
     glUseProgram(shader_prog);
 
+    // Find uniform location in shader program
+    int color_offset_loc = glGetUniformLocation(shader_prog, "colorOffset");
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -94,6 +102,10 @@ int main()
         // Background
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Set color offset according to time
+        float color_offset = ((float)sin(glfwGetTime()) + 1.f) / 2.f; // offset between 0. to 1.
+        glUniform1f(color_offset_loc, color_offset);
 
         // render vertex
         glUseProgram(shader_prog);
