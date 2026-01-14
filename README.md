@@ -4,6 +4,10 @@ https://learnopengl.com/
 
 # Compilation
 
+Make sure GLFW is installed.
+
 ```bash
-gcc main.c glad.c -lglfw
+clang++ -std=c++20 main.cpp lib/glad.c lib/app.cpp\
+    -I./include \
+    -lglfw
 ```
