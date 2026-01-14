@@ -1,12 +1,8 @@
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <array>
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <string_view>
 
 #include "lib/app.h"
 #include "lib/constant.h"
@@ -14,21 +10,8 @@
 #define WIDTH 800
 #define HEIGHT 600
 
-constexpr const char *VertexShaderSource = "#version 330 core\n"
-                                           "layout (location = 0) in vec3 aPos;\n"
-                                           "uniform float colorOffset;"
-                                           "out vec4 vertexColor;\n"
-                                           "void main()\n"
-                                           "{\n"
-                                           "   gl_Position = vec4(aPos, 1.0);\n"
-                                           "   vertexColor = vec4((aPos.x * 2 + 1 + colorOffset) / 3, (aPos.y * 2 + 1 + colorOffset) / 3, (aPos.z * 2 + 1 + colorOffset) / 3, 1.0);"
-                                           "}\0";
-
-constexpr const char *FragmentShaderSource = "#version 330 core\n"
-                                             "out vec4 FragColor;\n"
-                                             "in vec4 vertexColor;\n"
-                                             "void main()\n"
-                                             "{FragColor = vertexColor;}\0";
+#define VERTEX_SHADER_SOURCE_FILE "shaders/vertex.glsl"
+#define FRAGMENT_SHADER_SOURCE_FILE "shaders/frag.glsl"
 
 // define vertices & elements
 constexpr std::array<const Vertex, 4> VERTICES = {
@@ -47,25 +30,47 @@ constexpr std::array<const unsigned int, 6> ELEMENTS = {
     3,
 };
 
-// Define shaders
-constexpr std::array<const char *, 1> V_SHADERS{VertexShaderSource};
-constexpr std::array<const char *, 1> F_SHADERS{FragmentShaderSource};
+std::string read_file(const std::string_view file_name)
+{
+    // Check for size
+    auto size = std::filesystem::file_size(file_name);
+
+    // Reserve buffer
+    std::string retval;
+    retval.reserve(size);
+
+    // Read file
+    std::ifstream in(file_name.data());
+    in.read(retval.data(), size);
+
+    return retval;
+}
 
 int main()
 {
     puts("Starting...");
 
+    // Read shaders
+    puts("Reading shaders...");
+    const std::string v_shader = read_file(VERTEX_SHADER_SOURCE_FILE);
+    const char *const v_shaders[] = {v_shader.c_str()};
+    const std::string f_shader = read_file(FRAGMENT_SHADER_SOURCE_FILE);
+    const char *const f_shaders[] = {f_shader.c_str()};
+
     // Initialize app
+    puts("Initializing app...");
     App app(WIDTH, HEIGHT, WIN_TITLE);
     app.use_vertices(VERTICES, ELEMENTS);
-    app.use_shaders(V_SHADERS, F_SHADERS);
+    app.use_shaders(v_shaders, f_shaders);
     auto window = app.window();
 
     // Main loop
+    puts("Running...");
     while (!app.done())
     {
         app.update();
     }
 
+    puts("Closing...");
     return 0;
 }
