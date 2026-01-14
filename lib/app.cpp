@@ -157,7 +157,9 @@ void App::update() noexcept
 
     // Set color offset according to time
     float color_offset = ((float)sin(glfwGetTime()) + 1.f) / 2.f; // offset between 0. to 1.
+    float pos_offset = (color_offset / 2.f) - 0.25f;              // offset between -0.25 to 0.25
     glUniform1f(uniform_location("colorOffset"), color_offset);
+    glUniform1f(uniform_location("posOffset"), pos_offset);
 
     // render vertex
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
