@@ -36,8 +36,7 @@ std::string read_file(const std::string_view file_name)
     auto size = std::filesystem::file_size(file_name);
 
     // Reserve buffer
-    std::string retval;
-    retval.reserve(size);
+    std::string retval(size, '\0');
 
     // Read file
     std::ifstream in(file_name.data());
