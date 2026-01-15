@@ -68,7 +68,7 @@ unsigned int make_shader(GLenum shader_type, const std::span<const char *const> 
     if (!success)
     {
         glGetShaderInfoLog(shader, sizeof(inner_log), NULL, inner_log);
-        throw std::runtime_error(std::format("Shader compilation failed\n%s", inner_log));
+        throw std::runtime_error(std::format("Shader compilation failed\n{}", inner_log));
     }
 
     // Return shader
@@ -98,7 +98,7 @@ void App::use_shaders(const std::span<const char *const> v_info, const std::span
     if (!success)
     {
         glGetProgramInfoLog(m_shader_prog, sizeof(inner_log), NULL, inner_log);
-        throw std::runtime_error(std::format("Shader program linking failed\n%s", inner_log));
+        throw std::runtime_error(std::format("Shader program linking failed\n{}", inner_log));
     }
 
     // Delete shaders
