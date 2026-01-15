@@ -14,11 +14,11 @@
 #define FRAGMENT_SHADER_SOURCE_FILE "shaders/frag.glsl"
 
 // define vertices & elements
-constexpr std::array<const Vertex, 4> VERTICES = {
-    Vertex{-0.5f, 0.5f, 0.0f},
-    Vertex{0.5f, 0.5f, 0.0f},
-    Vertex{-0.5f, -0.5f, 0.0f},
-    Vertex{0.5f, -0.5f, 0.0f},
+constexpr std::array<const Vec3f, 4> VERTICES = {
+    Vec3f{-0.5f, 0.5f, 0.0f},
+    Vec3f{0.5f, 0.5f, 0.0f},
+    Vec3f{-0.5f, -0.5f, 0.0f},
+    Vec3f{0.5f, -0.5f, 0.0f},
 };
 constexpr std::array<const unsigned int, 6> ELEMENTS = {
     0,

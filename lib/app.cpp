@@ -115,7 +115,7 @@ int App::uniform_location(const char *key) noexcept
     return glGetUniformLocation(m_shader_prog, key);
 }
 
-void App::use_vertices(const std::span<const Vertex> vertices, const std::span<const unsigned int> elements) noexcept
+void App::use_vertices(const std::span<const Vec3f> vertices, const std::span<const unsigned int> elements) noexcept
 {
     // Set member var
     m_element_size = elements.size();
@@ -128,7 +128,7 @@ void App::use_vertices(const std::span<const Vertex> vertices, const std::span<c
     unsigned int vb_id;
     glGenBuffers(1, &vb_id);
     glBindBuffer(GL_ARRAY_BUFFER, vb_id);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vec3f), vertices.data(), GL_STATIC_DRAW);
 
     // Bind and set element buffer
     unsigned int eb_id;
@@ -137,7 +137,7 @@ void App::use_vertices(const std::span<const Vertex> vertices, const std::span<c
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.size() * sizeof(unsigned int), elements.data(), GL_STATIC_DRAW);
 
     // Set attribute pointer
-    glVertexAttribPointer(0, N_VERTEX_COMPONENT, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glVertexAttribPointer(0, N_VEC3F_COMPONENT, GL_FLOAT, GL_FALSE, sizeof(Vec3f), (void *)0);
     glEnableVertexAttribArray(0);
 }
 

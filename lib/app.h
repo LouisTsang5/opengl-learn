@@ -7,8 +7,8 @@ typedef struct
     float x;
     float y;
     float z;
-} Vertex;
-#define N_VERTEX_COMPONENT 3
+} Vec3f;
+#define N_VEC3F_COMPONENT 3
 
 class App
 {
@@ -23,7 +23,7 @@ public:
     ~App();
 
     void use_shaders(const std::span<const char *const> v_info, const std::span<const char *const> f_info);
-    void use_vertices(const std::span<const Vertex> vertices, const std::span<const unsigned int> elements) noexcept;
+    void use_vertices(const std::span<const Vec3f> vertices, const std::span<const unsigned int> elements) noexcept;
     void update() noexcept;
 
     [[nodiscard]] int uniform_location(const char *key) noexcept;
